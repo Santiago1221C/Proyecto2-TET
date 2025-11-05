@@ -49,6 +49,10 @@ public class Cart {
         this.totalPrice = this.items.stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum();
     }
 
+    public double calculateTotalPrice(){
+        return items.stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum();
+    }
+
     // Getters y Setters
 
     public Long getId() {
