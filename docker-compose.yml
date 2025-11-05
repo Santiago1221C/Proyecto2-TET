@@ -128,7 +128,7 @@ services:
   # Órdenes
   order-service:
     build:
-      context: ./microservices/order-service
+      context: ./microservices/order_service
       dockerfile: Dockerfile
     container_name: bookstore-order-service
     environment:
