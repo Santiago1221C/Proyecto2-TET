@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8082/orders";
+const API_BASE_URL = "http://localhost:8088/orders";
 
 // Crear orden a partir del carrito del usuario
 export const createOrder = async (userId: number) => {

@@ -1,26 +1,26 @@
 import axios from "axios";
 import type { Book } from "../types/Book";
 
-const API_BASE_URL = "http://localhost:8080/books";
+const API_BASE_URL = "http://localhost:8088/catalog";
 
 export const getAllBooks = async (): Promise<Book[]> => {
-  const response = await axios.get<Book[]>(`${API_BASE_URL}`);
+  const response = await axios.get<Book[]>(`${API_BASE_URL}/books`);
   return response.data;
 };
 
 export const getBookById = async (bookId: number): Promise<Book> => {
-  const response = await axios.get<Book>(`${API_BASE_URL}/${bookId}`);
+  const response = await axios.get<Book>(`${API_BASE_URL}/books/${bookId}`);
   return response.data;
 };
 
 // (Opcionales si los necesitas)
 export const createBook = async (book: Partial<Book>) => {
-  const response = await axios.post<Book>(`${API_BASE_URL}`, book);
+  const response = await axios.post<Book>(`${API_BASE_URL}/books`, book);
   return response.data;
 };
 
 export const updateBook = async (bookId: number, payload: Partial<Book>) => {
-  const response = await axios.put<Book>(`${API_BASE_URL}/${bookId}`, payload);
+  const response = await axios.put<Book>(`${API_BASE_URL}/books/${bookId}`, payload);
   return response.data;
 };
 

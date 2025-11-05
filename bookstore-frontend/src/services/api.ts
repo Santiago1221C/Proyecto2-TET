@@ -1,5 +1,9 @@
-export const API_BASE = {
-  catalog: "http://localhost:8080",   // Cambia por URL real
-  cart: "http://localhost:8081",
-  orders: "http://localhost:8082",
-};
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:8088";
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
+
+export default api;
