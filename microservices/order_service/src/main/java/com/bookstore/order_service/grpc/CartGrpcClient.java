@@ -1,27 +1,35 @@
 package com.bookstore.order_service.grpc;
 
-import com.bookstore.catalog.grpc.CatalogServiceGrpc;
-import com.bookstore.catalog.grpc.DecreaseStockRequest;
-import com.bookstore.catalog.grpc.StockUpdateResponse;
+import com.bookstore.cart.grpc.CartServiceGrpc;
+import com.bookstore.cart.grpc.ClearCartRequest;
+import com.bookstore.cart.grpc.GetCartRequest;
+import com.bookstore.cart.grpc.CartResponse;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CatalogGrpcClient {
+public class CartGrpcClient {
 
-    @GrpcClient("catalog-service")
-    private CatalogServiceGrpc.CatalogServiceBlockingStub blockingStub;
+    @GrpcClient("cart-service")
+    private CartServiceGrpc.CartServiceBlockingStub cartStub;
 
-    public boolean decreaseStock(Long bookId, int quantity){
-        System.out.println("Enviando solicitud gRPC al catálogo para decrementar stock del libro con ID: " + bookId);
-
-        DecreaseStockRequest request = DecreaseStockRequest.newBuilder()
-                .setBookId(bookId)
-                .setQuantity(quantity)
+    public CartResponse getCartByUserId(Long userId){
+        GetCartRequest request = GetCartRequest.newBuilder()
+                .setUserId(userId)
                 .build();
 
-        StockUpdateResponse response = blockingStub.decreaseStock(request);
+        return cartStub.getCartByUser(request);
+    }
+    
+    public boolean clearCart(Long userId){
+        System.out.println("Enviando solicitud gRPC al carrito para limpiar items del usuario: " + userId);
 
-        return response.getSuccess();
-    }   
+        ClearCartRequest request = ClearCartRequest.newBuilder()
+                .setUserId(userId)
+                .build();
+
+        CartResponse response = cartStub.clearCart(request);
+
+        return response.getItemsCount() == 0; // true si quedó vacío
+    }
 }
