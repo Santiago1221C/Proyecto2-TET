@@ -18,6 +18,9 @@ public class OrderItem {
     private String title;
 
     @Column(nullable = false)
+    private String author;
+
+    @Column(nullable = false)
     private Double price;
 
     @Column(nullable = false)
@@ -30,9 +33,10 @@ public class OrderItem {
 
     public OrderItem(){}
 
-    public OrderItem(Long bookId, String title, Double price, int quantity){
+    public OrderItem(Long bookId, String title, String author, Double price, int quantity){
         this.bookId = bookId;
         this.title = title;
+        this.author = author;
         this.price = price;
         this.quantity = quantity;
     }
@@ -55,6 +59,14 @@ public class OrderItem {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getAuthor(){
+        return author;
+    }
+
+    public void setAuthor(String author){
+        this.author = author;
     }
 
     public Double getPrice() {

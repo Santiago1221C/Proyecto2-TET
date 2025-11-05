@@ -1,8 +1,6 @@
 package com.bookstore.order_service.controller;
 
-import com.bookstore.order_service.dto.OrderRequest;
 import com.bookstore.order_service.model.Order;
-import com.bookstore.order_service.model.OrderItem;
 import com.bookstore.order_service.model.OrderStatus;
 import com.bookstore.order_service.service.OrderService;
 
@@ -10,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/orders")
@@ -22,23 +19,15 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    // Creación de una nueva orden
-    @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest){
-        // Mapeo al DTO
-        List<OrderItem> items = orderRequest.getItems().stream()
-                .map(it -> {
-                    OrderItem oi = new OrderItem();
-                    oi.setBookId(it.getBookId());
-                    oi.setTitle(it.getTitle());
-                    oi.setPrice(it.getPrice());
-                    oi.setQuantity(it.getQuantity());
-                    return oi;
-                })
-                .collect(Collectors.toList());
-        
-        Order created = orderService.createOrder(orderRequest.getUserId(), items);
-        return ResponseEntity.ok(created);
+    // Creación de una nueva orden desde el carrito del usuario
+    @PostMapping("/{userId}")
+    public ResponseEntity<Order> createOrderFromCart(@PathVariable Long userId){
+        try {
+            Order createdOrder = orderService.createOrderFromCart(userId);
+            return ResponseEntity.ok(createdOrder);
+        } catch (RuntimeException ex){
+            return ResponseEntity.badRequest().body(null);
+        }
     }
 
     // Obtener todas las órdenes
@@ -54,8 +43,15 @@ public class OrderController {
         return orderService.getOrderById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    // Obtener órdenes por usuario
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Order>> getOrdersByUser(@PathVariable Long userId){
+        List<Order> orders = orderService.getOrdersByUser(userId);
+        return ResponseEntity.ok(orders);
+    }
+
     // Actualizar estado de una orden
-    @PostMapping("/{id}/status")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<Order> updateOrderStatus(@PathVariable Long id, @RequestParam String status){
         try {
             OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
