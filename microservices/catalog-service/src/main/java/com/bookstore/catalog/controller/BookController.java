@@ -1,63 +1,83 @@
 package com.bookstore.catalog.controller;
 
 import com.bookstore.catalog.model.Book;
-import com.bookstore.catalog.service.BookService;
-import jakarta.validation.Valid;
+import com.bookstore.catalog.repository.BookRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/books")
-@CrossOrigin(origins = "*")
 public class BookController {
 
-    private final BookService service;
+    private final BookRepository bookRepository;
 
-    public BookController(BookService service){
-        this.service = service;
+    public BookController(BookRepository bookRepository){
+        this.bookRepository = bookRepository;
     }
 
+    // Obtener todos los libros
     @GetMapping
     public List<Book> getAllBooks(){
-        return service.getAllBooks();
+        return bookRepository.findAll();
     }
 
+
+    // Obtener un libro por ID
     @GetMapping("/{id}")
     public ResponseEntity<Book> getBookById(@PathVariable Long id){
-        return service.getBookById(id)
+        return bookRepository.findById(id)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
 
+    // Crear un nuevo libro
     @PostMapping
-    public ResponseEntity<Book> createBook(@Valid @RequestBody Book book){
-        return ResponseEntity.ok(service.createBook(book));
+    public ResponseEntity<Book> createBook(@RequestBody Book book){
+        Book saved = bookRepository.save(book);
+        return ResponseEntity.ok(saved);
     }
 
+    // Actualizar un libro existente
     @PutMapping("/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable Long id, @Valid @RequestBody Book book){
-        return ResponseEntity.ok(service.updateBook(id, book));
+    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book updatedBook){
+        return bookRepository.findById(id)
+                .map(existingBook -> {
+                    existingBook.setTitle(updatedBook.getTitle());
+                    existingBook.setAuthor(updatedBook.getAuthor());
+                    existingBook.setDescription(updatedBook.getDescription());
+                    existingBook.setGenre(updatedBook.getGenre());
+                    existingBook.setPrice(updatedBook.getPrice());
+                    existingBook.setStock(updatedBook.getStock());
+                    Book saved = bookRepository.save(existingBook);
+                    return ResponseEntity.ok(saved);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
+    // Eliminar un libro
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable Long id){
-        service.deleteBook(id);
-        return ResponseEntity.noContent().build();
+        if (bookRepository.existsById(id)){
+            bookRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @GetMapping("/search/title/{title}")
-    public List<Book> searchByTitle(@PathVariable String title){
-        return service.searchByTitle(title);
-    }
+    // Disminuir stock de un libro
+    @PutMapping("/{id}/decreaseStock")
+    public ResponseEntity<String> decreaseStock(@PathVariable Long id, @RequestParam int quantity){
+        Book book = bookRepository.findById(id).orElseThrow(() -> new RuntimeException("Libro no encontrado con ID: " + id));
 
-    @GetMapping("/search/author/{author}")
-    public List<Book> searchByAuthor(@PathVariable String author){
-        return service.searchByAuthor(author);
-    }
+        if (book.getStock() < quantity){
+            return ResponseEntity.badRequest().body("Stock insuficiente para el libro: " + book.getTitle());
+        }
+        
+        book.setStock(book.getStock() - quantity);
+        bookRepository.save(book);
 
-    @GetMapping("/search/genre/{genre}")
-    public List<Book> searchByGenre(@PathVariable String genre){
-        return service.searchByGenre(genre);
+        return ResponseEntity.ok("Stock actualizado correctamente para el libro: " + book.getTitle());
     }
 }
