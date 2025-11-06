@@ -1,54 +1,74 @@
-"""
-Review Service - Microservice for handling book reviews and ratings
-Author: Bookstore Microservices Architecture
-Description: Manages customer reviews with RabbitMQ notifications
-"""
-
-from flask import Flask, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI
+from pydantic import BaseModel
+from dotenv import load_dotenv
+import threading
+import json
+import pika
 from config.config import Config
-from routes.review_routes import review_bp
-from routes.health_routes import health_bp
-from events.review_producer import ReviewProducer
-import logging
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+load_dotenv()
+
+app = FastAPI(title="Review Service")
+config = Config()
+
+# RabbitMQ Connection
+credentials = pika.PlainCredentials(
+    config.RABBITMQ_USER,
+    config.RABBITMQ_PASS
 )
-logger = logging.getLogger(__name__)
 
-def create_app():
-    """Application factory pattern"""
-    app = Flask(__name__)
-    app.config.from_object(Config)
-    
-    # Enable CORS for all routes
-    CORS(app, resources={
-        r"/api/*": {
-            "origins": "*",
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
-        }
-    })
-    
-    # Register blueprints
-    app.register_blueprint(health_bp, url_prefix='/api/health')
-    app.register_blueprint(review_bp, url_prefix='/api/reviews')
-    
-    logger.info(f"Review Service started on port {app.config['PORT']}")
-    
-    return app
+params = pika.ConnectionParameters(
+    host=config.RABBITMQ_HOST,
+    port=config.RABBITMQ_PORT,
+    virtual_host=config.RABBITMQ_VHOST,
+    credentials=credentials
+)
 
-app = create_app()
+connection = pika.BlockingConnection(params)
+channel = connection.channel()
 
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=app.config['PORT'],
-        debug=app.config['DEBUG']
+# Declare exchange (MUST match payment_service)
+channel.exchange_declare(
+    exchange=config.PAYMENT_EXCHANGE,   # "payment_exchange"
+    exchange_type="topic",
+    durable=True
+)
+
+# Declare queue for receiving payment events
+queue = "review_payment_q"
+channel.queue_declare(queue=queue, durable=True)
+
+# Bind: receive all events where routing key begins with "payment."
+channel.queue_bind(
+    queue=queue,
+    exchange=config.PAYMENT_EXCHANGE,
+    routing_key="payment.*"
+)
+
+class ReviewCreate(BaseModel):
+    userId: str
+    text: str
+
+@app.get("/health")
+def health():
+    return {"ok": True, "service": "review-service"}
+
+@app.post("/reviews")
+def create_review(data: ReviewCreate):
+    return {"ok": True, "reviewId": "rev_" + data.userId}
+
+def handle_messages():
+    def callback(ch, method, properties, body):
+        event = json.loads(body)
+        print("[review_service] Received Payment Event:", event)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+    channel.basic_consume(
+        queue=queue,
+        on_message_callback=callback,
+        auto_ack=False
     )
 
+    channel.start_consuming()
 
-
+threading.Thread(target=handle_messages, daemon=True).start()

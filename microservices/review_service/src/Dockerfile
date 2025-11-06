@@ -22,6 +22,3 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
 
 # Run with gunicorn for production
 CMD ["gunicorn", "--bind", "0.0.0.0:5002", "--workers", "4", "--timeout", "120", "app:app"]
-
-
-
