@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   # === BASE DE DATOS ===
   mysql-db:
@@ -8,15 +6,17 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: catalogdb
+      MYSQL_USER: bookstore
+      MYSQL_PASSWORD: bookstore123
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
     networks:
       - bookstore-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,9 +52,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/catalogdb
-      SPRING_DATASOURCE_USERNAME: bookstore
-      SPRING_DATASOURCE_PASSWORD: bookstore123
+      DB_URL: jdbc:mysql://mysql-db:3306/catalogdb
+      DB_USER: bookstore
+      DB_PASSWORD: bookstore123
       GRPC_SERVER_PORT: 9090
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
@@ -78,9 +78,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8081
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/cartdb
-      SPRING_DATASOURCE_USERNAME: bookstore
-      SPRING_DATASOURCE_PASSWORD: bookstore123
+      DB_URL: jdbc:mysql://mysql-db:3306/cartdb
+      DB_USER: bookstore
+      DB_PASSWORD: bookstore123
       CATALOG_GRPC_HOST: catalog-service
       CATALOG_GRPC_PORT: 9090
       RABBITMQ_HOST: rabbitmq
@@ -109,9 +109,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8082
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/orderdb
-      SPRING_DATASOURCE_USERNAME: bookstore
-      SPRING_DATASOURCE_PASSWORD: bookstore123
+      DB_URL: jdbc:mysql://mysql-db:3306/orderdb
+      DB_USER: bookstore
+      DB_PASSWORD: bookstore123
       CART_GRPC_HOST: cart-service
       CART_GRPC_PORT: 9091
       RABBITMQ_HOST: rabbitmq
@@ -130,8 +130,6 @@ services:
     networks:
       - bookstore-network
     restart: unless-stopped
-
-  # === MICROSERVICIOS DE TU COMPAÑERO ===
 
   # Servicio de usuarios
   user-service:
@@ -250,4 +248,3 @@ networks:
 volumes:
   mysql-data:
   rabbitmq-data:
-  mongodb-data:

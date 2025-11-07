@@ -2,10 +2,13 @@ package com.bookstore.order_service.service;
 
 import com.bookstore.order_service.grpc.CatalogGrpcClient;
 import com.bookstore.order_service.grpc.CartGrpcClient;
+import com.bookstore.order_service.messaging.OrderEventPublisher;
 import com.bookstore.order_service.model.Order;
 import com.bookstore.order_service.model.OrderItem;
 import com.bookstore.order_service.model.OrderStatus;
 import com.bookstore.order_service.repository.OrderRepository;
+import com.bookstore.order_service.config.RabbitMQConfig;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +23,15 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CatalogGrpcClient catalogGrpcClient;
     private final CartGrpcClient cartGrpcClient;
+    private final OrderEventPublisher orderEventPublisher;
 
     
 
-    public OrderService(OrderRepository orderRepository, CatalogGrpcClient catalogGrpcClient, CartGrpcClient cartGrpcClient){
+    public OrderService(OrderRepository orderRepository, CatalogGrpcClient catalogGrpcClient, CartGrpcClient cartGrpcClient, OrderEventPublisher orderEventPublisher){
         this.orderRepository = orderRepository;
         this.catalogGrpcClient = catalogGrpcClient;
         this.cartGrpcClient = cartGrpcClient;
+        this.orderEventPublisher = orderEventPublisher;
     }
 
     // Crear una nueva orden para un usuario
@@ -78,6 +83,11 @@ public class OrderService {
             } else {
                 System.out.println("Stock actualizado correctamente para el libro con ID: " +  item.getBookId());
             }
+        }
+
+        // Publicar evento en RabbitMQ
+        for (OrderItem item : savedOrder.getItems()) {
+            orderEventPublisher.publishOrderCreated(item.getBookId(), item.getQuantity());
         }
 
         // Limpiar carrito después de crear la orden

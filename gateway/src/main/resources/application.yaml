@@ -26,18 +26,29 @@ spring:
       # 👇 Tus rutas
       routes:
         - id: catalog-service
-          uri: http://localhost:8080
+          uri: http://catalog-service:8080
           predicates:
             - Path=/catalog/**
           filters:
-            - StripPrefix=1
+            - RewritePath=/catalog/(?<segment>.*), /${segment}
 
         - id: cart-service
-          uri: http://localhost:8081
+          uri: http://cart-service:8081
           predicates:
             - Path=/cart/**
+          filters:
+            - RewritePath=/cart/(?<segment>.*), /${segment}
 
         - id: order-service
-          uri: http://localhost:8082
+          uri: http://order-service:8082
           predicates:
             - Path=/orders/**
+          filters:
+            - RewritePath=/orders/(?<segment>.*), /${segment}
+        
+        - id: user-service
+          uri: http://user-service:8083
+          predicates:
+            - Path=/users/**
+          filters:
+            - RewritePath=/users/(?<segment>.*), /${segment}

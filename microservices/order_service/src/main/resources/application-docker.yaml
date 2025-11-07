@@ -18,10 +18,10 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
 
   rabbitmq:
-    host: rabbitmq
-    port: 5672
-    username: bookstore
-    password: bookstore123
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:bookstore}
+    password: ${RABBITMQ_PASS:bookstore123}
 
 grpc:
   client:
