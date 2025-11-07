@@ -5,10 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;
-
-/**
- * JWT Response DTO
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

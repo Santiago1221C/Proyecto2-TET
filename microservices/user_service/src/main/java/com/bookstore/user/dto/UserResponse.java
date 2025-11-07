@@ -6,10 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-
-/**
- * User Response DTO
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,5 +24,3 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
 }
-
-
