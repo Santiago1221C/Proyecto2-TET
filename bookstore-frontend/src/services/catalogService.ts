@@ -1,7 +1,8 @@
 import axios from "axios";
 import type { Book } from "../types/Book";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8088/catalog";
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8088").replace(/\/$/, "");
+const API_BASE_URL = `${API_BASE}/catalog`;
 
 export const getAllBooks = async (): Promise<Book[]> => {
   const response = await axios.get<Book[]>(`${API_BASE_URL}/books`);
