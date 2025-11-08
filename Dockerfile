@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 FROM maven:3.9.11-eclipse-temurin-17 AS build
 
 WORKDIR /app
@@ -26,4 +27,17 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 
+=======
+FROM gradle:7.5.0-jdk11-alpine as builder
+USER root
+WORKDIR /builder
+ADD . /builder
+RUN gradle build
+
+FROM openjdk:11.0.16-jre-slim
+WORKDIR /app
+EXPOSE 8080
+COPY --from=builder /builder/build/libs/kotlin-api-skeleton-0.0.1.jar .
+CMD ["java", "-jar", "kotlin-api-skeleton-0.0.1.jar"]
+>>>>>>> eaeffc425a5398e8958d7464d3c13f3a144a3988
 
