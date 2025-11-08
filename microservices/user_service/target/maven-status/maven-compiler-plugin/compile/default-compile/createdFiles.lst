@@ -1,3 +1,0 @@
-com\bookstore\user\dto\RegisterRequest.class
-com\bookstore\user\security\JwtAuthenticationFilter.class
-com\bookstore\user\controller\HealthController.class
